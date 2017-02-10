@@ -1,3 +1,7 @@
+<<<<<<< HEAD
 theme: material
 language: zh-CN
 url:https://gloomyluo.github.io
+=======
+theme: jekyll-theme-merlot
+>>>>>>> 8a503f403e89d5dbd37e8d19aa2db5e42d4a54f8
