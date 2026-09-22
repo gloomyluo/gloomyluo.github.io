@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>中国国家级旅游度假区分布图</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--primary:#1a3a5c;--accent:#2d6a9f;--bg:#f0f2f5;--card:#fff;--text:#333;--muted:#888;--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei','PingFang SC',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* Header */
+.header{background:linear-gradient(135deg,#1a3a5c,#2d6a9f,#1a3a5c);color:#fff;padding:24px 16px 20px;text-align:center}
+.header h1{font-size:22px;font-weight:700;letter-spacing:1px}
+.header p{font-size:12px;opacity:.75;margin-top:6px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px}
+.stat-card{background:var(--card);border-radius:10px;padding:14px 8px;text-align:center;box-shadow:0 1px 8px rgba(0,0,0,.05)}
+.stat-num{font-size:26px;font-weight:700;color:var(--accent)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Map */
+.map-section{padding:0 12px}
+.map-wrapper{border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.08)}
+#map{width:100%;height:50vh;min-height:280px;max-height:520px;background:#dde8f0}
+
+/* Leaflet controls mobile fix */
+.legend{background:rgba(255,255,255,.95);border-radius:8px;padding:10px 14px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:12px;line-height:1.9;max-width:160px}
+.legend h4{margin:0 0 2px;font-size:13px;color:#333;border-bottom:1px solid #eee;padding-bottom:3px}
+.legend ul{list-style:none;margin:0;padding:0}
+.legend li{cursor:pointer;padding:1px 4px;border-radius:4px;transition:background .15s}
+.legend li:active{background:#e0ecf7}
+.legend li span{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle;border:1.5px solid #fff;box-shadow:0 0 2px rgba(0,0,0,.25)}
+.info-box{background:rgba(255,255,255,.95);border-radius:8px;padding:10px 14px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:12px;line-height:1.6;max-width:200px}
+.info-box h3{font-size:14px;color:var(--primary);margin-bottom:4px}
+.search-wrap{background:rgba(255,255,255,.95);border-radius:8px;padding:6px 10px;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;gap:6px}
+.search-wrap input{border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:13px;width:180px;outline:none;transition:border .2s}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-wrap .count{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* Table section */
+.table-section{padding:16px 12px 80px}
+.table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.table-header h2{font-size:17px;color:var(--primary)}
+.filter-group{display:flex;gap:6px;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border:1px solid #ddd;border-radius:16px;background:var(--card);cursor:pointer;font-size:11px;transition:all .2s;color:#555;white-space:nowrap}
+.filter-btn:active{transform:scale(.95)}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Table - horizontal scroll on mobile */
+.table-wrap{background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.05);overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;min-width:640px;border-collapse:collapse}
+thead{background:var(--primary);color:#fff;position:sticky;top:0;z-index:1}
+th{padding:12px 14px;text-align:left;font-weight:600;font-size:12px;white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;vertical-align:middle}
+tr.data-row{cursor:pointer;transition:background .15s}
+tr.data-row:active{background:#eef4fb}
+.region-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap}
+.batch-tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;background:#f0f5ff;color:var(--accent);white-space:nowrap}
+.name-cell{font-weight:600;color:var(--primary)}
+.desc-cell{color:#666;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Scroll hint */
+.scroll-hint{text-align:center;font-size:11px;color:#bbb;padding:6px 0;display:none}
+
+/* Footer */
+.footer{text-align:center;padding:16px;color:#aaa;font-size:11px;border-top:1px solid #eee;background:var(--card)}
+
+/* Back to top */
+.back-top{position:fixed;bottom:20px;right:16px;width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,.2);display:none;z-index:999;transition:opacity .3s}
+.back-top:active{opacity:.7}
+
+/* Desktop overrides */
+@media(min-width:769px){
+  .header{padding:32px 20px 28px}
+  .header h1{font-size:30px;letter-spacing:3px}
+  .header p{font-size:14px}
+  .stats{max-width:900px;margin:20px auto;gap:16px}
+  .stat-card{padding:20px}
+  .stat-num{font-size:36px}
+  .stat-label{font-size:13px}
+  .map-section{max-width:1400px;margin:0 auto;padding:0 20px}
+  #map{height:520px;min-height:auto}
+  .legend{max-width:none;font-size:13px;padding:12px 16px;line-height:2}
+  .info-box{max-width:280px;font-size:13px;padding:14px 18px}
+  .search-wrap input{width:260px}
+  .table-section{max-width:1400px;margin:0 auto;padding:20px 20px 60px}
+  .table-header h2{font-size:20px}
+  .filter-btn{padding:6px 14px;font-size:12px}
+  .table-wrap{overflow-x:visible}
+  table{min-width:auto}
+  td,th{padding:12px 16px;font-size:13px}
+  .desc-cell{max-width:320px}
+  .scroll-hint{display:none!important}
+}
+
+/* Mobile specific */
+@media(max-width:768px){
+  .stats{grid-template-columns:repeat(2,1fr);gap:8px;padding:12px}
+  .stat-card{padding:12px 6px}
+  .stat-num{font-size:22px}
+  .stat-label{font-size:10px}
+  .map-section{padding:0 8px}
+  #map{height:42vh;min-height:240px}
+  .table-section{padding:12px 8px 80px}
+  .table-header{flex-direction:column;align-items:flex-start}
+  .filter-group{width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .scroll-hint{display:block}
+  .back-top{bottom:16px;right:12px;width:38px;height:38px;font-size:16px}
+}
+
+/* Smaller phones */
+@media(max-width:374px){
+  .header h1{font-size:18px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:6px}
+  .stat-num{font-size:20px}
+  #map{height:38vh}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>中国国家级旅游度假区分布图</h1>
+  <p>文化和旅游部认定 · 截至2024年6月 · 共85家</p>
+</div>
+
+<div class="stats">
+  <div class="stat-card"><div class="stat-num">85</div><div class="stat-label">国家级度假区</div></div>
+  <div class="stat-card"><div class="stat-num">28</div><div class="stat-label">覆盖省(区/市)</div></div>
+  <div class="stat-card"><div class="stat-num">7</div><div class="stat-label">批次认定</div></div>
+  <div class="stat-card"><div class="stat-num">7</div><div class="stat-label">大地区分区</div></div>
+</div>
+
+<div class="map-section">
+  <div class="map-wrapper">
+    <div id="map"></div>
+  </div>
+</div>
+
+<div class="table-section">
+  <div class="table-header">
+    <h2>完整名录</h2>
+    <div class="filter-group" id="filterGroup">
+      <button class="filter-btn active" data-region="全部">全部(85)</button>
+    </div>
+  </div>
+  <div class="scroll-hint">← 左右滑动查看完整表格 →</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th style="width:64px">地区</th>
+          <th style="width:120px">省级行政区</th>
+          <th>度假区名称</th>
+          <th>一句话简介</th>
+          <th style="width:76px">批次</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  数据来源：文化和旅游部政府门户网站 · 地图数据: Gaode/AMap
+</div>
+
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+var resorts=[
+{r:"东北",p:"辽宁省",n:"大连长山群岛旅游度假区",d:"黄海前哨的海岛型滨海度假区",b:"第七批",la:39.27,lo:122.72},
+{r:"东北",p:"辽宁省",n:"大连金石滩国家旅游度假区",d:"北方滨海地质奇观与休闲度假胜地",b:"1992年首批",la:39.10,lo:121.98},
+{r:"东北",p:"吉林省",n:"长白山旅游度假区",d:"以长白山天池为核心的火山地貌度假胜地",b:"第一批",la:42.00,lo:128.05},
+{r:"东北",p:"吉林省",n:"长白山华美胜地旅游度假区",d:"长白山区域的高端冰雪与温泉度假地",b:"第七批",la:42.40,lo:128.10},
+{r:"东北",p:"黑龙江省",n:"亚布力滑雪旅游度假区",d:"中国滑雪产业发源地和冰雪旅游名片",b:"第四批",la:45.10,lo:128.02},
+{r:"华北",p:"北京市",n:"密云古北水镇国际休闲旅游度假区",d:"长城脚下的北方水乡，京郊休闲度假首选",b:"第七批",la:40.65,lo:117.24},
+{r:"华北",p:"河北省",n:"崇礼冰雪旅游度假区",d:"2022冬奥赛区，顶级冰雪运动度假地",b:"第四批",la:40.97,lo:115.48},
+{r:"华北",p:"河北省",n:"秦皇岛市北戴河度假区",d:"百年避暑胜地，海滨疗养与会议度假地",b:"第五批",la:39.83,lo:119.48},
+{r:"华北",p:"山西省",n:"晋城太行锡崖沟旅游度假区",d:"太行山挂壁公路旁的山地度假区",b:"第七批",la:35.50,lo:113.30},
+{r:"华北",p:"内蒙古自治区",n:"兴安盟阿尔山旅游度假区",d:"火山温泉与大兴安岭林海的边境度假地",b:"第七批",la:47.17,lo:119.95},
+{r:"华东",p:"上海市",n:"上海佘山国家旅游度假区",d:"都市近郊山林度假与主题乐园聚集区",b:"第四批",la:31.10,lo:121.18},
+{r:"华东",p:"上海市",n:"上海国际旅游度假区",d:"以上海迪士尼为核心的主题娱乐度假区",b:"第五批",la:31.14,lo:121.67},
+{r:"华东",p:"江苏省",n:"南京汤山温泉旅游度假区",d:"千年温泉古镇，享有千年圣汤美誉",b:"第一批",la:32.03,lo:118.85},
+{r:"华东",p:"江苏省",n:"天目湖旅游度假区",d:"山水秀美的湖泊型生态度假区",b:"第一批",la:31.35,lo:119.48},
+{r:"华东",p:"江苏省",n:"阳澄湖半岛旅游度假区",d:"以大闸蟹闻名的湖滨休闲度假区",b:"第一批",la:31.40,lo:120.82},
+{r:"华东",p:"江苏省",n:"无锡市宜兴阳羡生态旅游度假区",d:"竹海绵延、紫砂文化的山水度假区",b:"第二批",la:31.28,lo:119.72},
+{r:"华东",p:"江苏省",n:"常州太湖湾旅游度假区",d:"太湖之滨集主题公园与山水于一体",b:"第四批",la:31.50,lo:119.98},
+{r:"华东",p:"江苏省",n:"常熟虞山文化旅游度假区",d:"吴文化发源地，山水与古城交融的度假区",b:"第五批",la:31.68,lo:120.74},
+{r:"华东",p:"江苏省",n:"宿迁骆马湖旅游度假区",d:"洪泽湖畔苏北小三亚的滨湖度假区",b:"第六批",la:34.00,lo:118.15},
+{r:"华东",p:"江苏省",n:"苏州吴江东太湖生态旅游度假区",d:"太湖东岸生态湿地与水乡文化度假区",b:"第七批",la:31.12,lo:120.68},
+{r:"华东",p:"浙江省",n:"东钱湖旅游度假区",d:"浙江西湖，城市近郊湖泊度假地",b:"第一批",la:29.83,lo:121.55},
+{r:"华东",p:"浙江省",n:"湖州市太湖旅游度假区",d:"太湖南岸滨湖休闲度假区",b:"第一批",la:30.90,lo:120.08},
+{r:"华东",p:"浙江省",n:"湘湖旅游度假区",d:"萧山姐妹湖，越文化发祥地",b:"第一批",la:30.17,lo:120.25},
+{r:"华东",p:"浙江省",n:"湖州市安吉灵峰旅游度假区",d:"竹海茶乡间的生态休闲度假区",b:"第二批",la:30.63,lo:119.68},
+{r:"华东",p:"浙江省",n:"德清莫干山国际旅游度假区",d:"民国避暑名山，精品民宿产业集群地",b:"第四批",la:30.53,lo:119.87},
+{r:"华东",p:"浙江省",n:"淳安千岛湖旅游度假区",d:"千座岛屿星布的湖光山色度假胜地",b:"第四批",la:29.60,lo:119.00},
+{r:"华东",p:"浙江省",n:"泰顺廊桥-氡泉旅游度假区",d:"古廊桥与天然氡泉结合的山地度假地",b:"第五批",la:27.55,lo:119.98},
+{r:"华东",p:"浙江省",n:"鉴湖旅游度假区",d:"绍兴母亲湖，黄酒文化与水乡度假地",b:"第五批",la:30.00,lo:120.55},
+{r:"华东",p:"浙江省",n:"湖州吴兴西塞山旅游度假区",d:"西塞山前白鹭飞的诗意山水度假地",b:"第七批",la:30.80,lo:120.15},
+{r:"华东",p:"安徽省",n:"合肥市巢湖半汤温泉养生度假区",d:"千年温泉古镇，巢湖之畔养生度假地",b:"第二批",la:31.62,lo:117.87},
+{r:"华东",p:"安徽省",n:"黄山黟县国际乡村旅游度假区",d:"徽派古村落群与田园风光的乡村旅游目的地",b:"第七批",la:29.93,lo:117.93},
+{r:"华东",p:"福建省",n:"福州市鼓岭旅游度假区",d:"百年避暑名山，中西交融的山地度假区",b:"第二批",la:26.08,lo:119.35},
+{r:"华东",p:"江西省",n:"宜春市明月山温汤旅游度假区",d:"富硒温泉与月亮文化相结合的康养度假地",b:"第二批",la:27.78,lo:114.32},
+{r:"华东",p:"江西省",n:"上饶市三清山金沙旅游度假区",d:"世界自然遗产三清山脚下的休闲度假地",b:"第四批",la:28.90,lo:118.06},
+{r:"华东",p:"江西省",n:"新余市仙女湖七夕文化旅游度假区",d:"七夕文化发源地，湖泊型浪漫度假区",b:"第五批",la:27.80,lo:114.92},
+{r:"华东",p:"江西省",n:"赣州市大余县丫山旅游度假区",d:"竹林溪谷间的山地生态度假区",b:"第五批",la:25.40,lo:114.36},
+{r:"华东",p:"江西省",n:"南昌梅岭生态旅游度假区",d:"小庐山城市近郊山林生态度假区",b:"第七批",la:28.72,lo:115.82},
+{r:"华东",p:"山东省",n:"凤凰岛旅游度假区",d:"中国海岸线上资源最优的滨海度假区之一",b:"第一批",la:35.93,lo:120.22},
+{r:"华东",p:"山东省",n:"海阳旅游度假区",d:"拥有万米金沙滩的滨海度假胜地",b:"第一批",la:36.72,lo:121.17},
+{r:"华东",p:"山东省",n:"烟台市蓬莱旅游度假区",d:"八仙过海传说的海滨文化旅游度假地",b:"第二批",la:37.81,lo:120.75},
+{r:"华东",p:"山东省",n:"日照山海天旅游度假区",d:"日出先照之城的山海休闲度假区",b:"第四批",la:35.38,lo:119.50},
+{r:"华东",p:"山东省",n:"烟台金沙滩旅游度假区",d:"十公里黄金海岸线的滨海休闲度假区",b:"第五批",la:37.58,lo:121.15},
+{r:"华东",p:"山东省",n:"荣成好运角旅游度假区",d:"中国好望角，海草房与天鹅湖的滨海度假地",b:"第五批",la:37.18,lo:122.40},
+{r:"华东",p:"山东省",n:"德州齐河黄河国际生态城旅游度假区",d:"黄河之畔集主题乐园与湿地生态于一体的度假区",b:"第七批",la:36.80,lo:116.75},
+{r:"华中",p:"河南省",n:"尧山温泉旅游度假区",d:"伏牛山东麓温泉疗养度假地",b:"第一批",la:33.73,lo:112.70},
+{r:"华中",p:"河南省",n:"三门峡市天鹅湖旅游度假区",d:"万只白天鹅越冬栖息的黄河湿地度假区",b:"第五批",la:34.77,lo:111.18},
+{r:"华中",p:"河南省",n:"郑州银基国际旅游度假区",d:"中原地区大型主题乐园群集聚度假区",b:"第七批",la:34.75,lo:113.58},
+{r:"华中",p:"湖北省",n:"武当太极湖旅游度假区",d:"武当山下道教文化与水域休闲结合",b:"第一批",la:32.40,lo:111.00},
+{r:"华中",p:"湖北省",n:"神农架木鱼旅游度假区",d:"华中屋脊，原始森林与避暑度假胜地",b:"第五批",la:31.47,lo:110.67},
+{r:"华中",p:"湖北省",n:"武汉黄陂区木兰湖旅游度假区",d:"木兰文化与湖泊休闲结合的都市近郊度假地",b:"第七批",la:30.95,lo:114.35},
+{r:"华中",p:"湖南省",n:"灰汤温泉旅游度假区",d:"千年温泉古镇，有天然药汤之誉",b:"第一批",la:27.92,lo:112.52},
+{r:"华中",p:"湖南省",n:"常德柳叶湖旅游度假区",d:"城中湖泊，集水上运动与休闲于一体",b:"第四批",la:29.28,lo:111.72},
+{r:"华中",p:"湖南省",n:"岳阳洞庭湖旅游度假区",d:"天下楼岳阳楼畔的湖泊文化度假区",b:"第五批",la:29.38,lo:113.10},
+{r:"华中",p:"湖南省",n:"长沙铜官窑文化旅游度假区",d:"世界釉下多彩瓷发源地的陶瓷文化度假区",b:"第七批",la:28.38,lo:112.98},
+{r:"华南",p:"广东省",n:"东部华侨城旅游度假区",d:"山海间大型综合生态度假区",b:"第一批",la:22.55,lo:114.30},
+{r:"华南",p:"广东省",n:"河源巴伐利亚庄园",d:"欧式风情与温泉养生结合的主题度假庄园",b:"第三批",la:23.75,lo:114.42},
+{r:"华南",p:"广东省",n:"珠海横琴长隆国际海洋度假区",d:"澳门隔壁的海洋主题大型综合度假区",b:"第七批",la:22.12,lo:113.53},
+{r:"华南",p:"广西壮族自治区",n:"桂林阳朔遇龙河旅游度假区",d:"山水田园画卷中的漓江支流度假区",b:"第三批",la:24.77,lo:110.45},
+{r:"华南",p:"广西壮族自治区",n:"大新明仕旅游度假区",d:"中越边境小桂林的田园风光度假地",b:"第五批",la:22.83,lo:107.10},
+{r:"华南",p:"广西壮族自治区",n:"北海银滩国家旅游度假区",d:"天下第一滩的热带滨海度假胜地",b:"第六批",la:21.45,lo:109.12},
+{r:"华南",p:"广西壮族自治区",n:"桂林雁山旅游度假区",d:"桂林山水甲天下的山林度假区",b:"第七批",la:25.07,lo:110.30},
+{r:"华南",p:"海南省",n:"三亚市亚龙湾旅游度假区",d:"中国最知名的热带滨海度假天堂",b:"第二批",la:18.20,lo:109.60},
+{r:"华南",p:"海南省",n:"琼海博鳌东屿岛旅游度假区",d:"博鳌亚洲论坛永久会址所在的会议度假岛",b:"第六批",la:19.10,lo:110.58},
+{r:"华南",p:"海南省",n:"万宁石梅湾旅游度假区",d:"青皮林与碧海银沙的热带海湾度假地",b:"第七批",la:18.65,lo:110.25},
+{r:"西南",p:"重庆市",n:"仙女山旅游度假区",d:"高山草原型避暑度假胜地",b:"第一批",la:29.45,lo:107.75},
+{r:"西南",p:"重庆市",n:"重庆丰都南天湖旅游度假区",d:"高山湖泊避暑与鬼城文化旅游结合",b:"第四批",la:29.85,lo:107.73},
+{r:"西南",p:"重庆市",n:"石柱黄水旅游度假区",d:"土家族风情的高山避暑度假区",b:"第七批",la:30.20,lo:108.42},
+{r:"西南",p:"四川省",n:"邛海旅游度假区",d:"西昌城畔高原湖泊康养度假地",b:"第一批",la:27.85,lo:102.25},
+{r:"西南",p:"四川省",n:"成都天府青城康养休闲旅游度假区",d:"青城山-都江堰世界遗产旁的康养度假地",b:"第三批",la:30.90,lo:103.57},
+{r:"西南",p:"四川省",n:"峨眉山市峨秀湖旅游度假区",d:"峨眉山世界遗产旁的湖畔度假区",b:"第四批",la:29.48,lo:103.48},
+{r:"西南",p:"四川省",n:"宜宾蜀南竹海旅游度假区",d:"万亩竹海中的绿色康养度假地",b:"第五批",la:28.55,lo:104.85},
+{r:"西南",p:"四川省",n:"成都西岭雪山-花水湾旅游度假区",d:"窗含西岭千秋雪的雪山温泉度假地",b:"第七批",la:30.68,lo:103.25},
+{r:"西南",p:"贵州省",n:"赤水市赤水河谷旅游度假区",d:"丹霞赤水与酱酒文化的河谷度假带",b:"第二批",la:28.58,lo:105.70},
+{r:"西南",p:"贵州省",n:"六盘水市野玉海山地旅游度假区",d:"中国凉都山地避暑与彝族文化度假地",b:"第四批",la:26.55,lo:104.83},
+{r:"西南",p:"云南省",n:"阳宗海旅游度假区",d:"昆明近郊高原湖泊休闲度假区",b:"第一批",la:24.92,lo:102.98},
+{r:"西南",p:"云南省",n:"西双版纳旅游度假区",d:"热带雨林风情与傣族文化度假地",b:"第一批",la:22.00,lo:100.80},
+{r:"西南",p:"云南省",n:"玉溪抚仙湖旅游度假区",d:"中国最大深水型淡水湖畔的高原度假地",b:"第三批",la:24.35,lo:102.88},
+{r:"西南",p:"云南省",n:"大理古城旅游度假区",d:"风花雪月之城，白族文化体验度假地",b:"第四批",la:25.70,lo:100.18},
+{r:"西南",p:"云南省",n:"德宏芒市孔雀湖旅游度假区",d:"傣族风情与热带雨林的边境度假区",b:"第七批",la:24.38,lo:98.58},
+{r:"西南",p:"西藏自治区",n:"林芝市鲁朗小镇旅游度假区",d:"藏东南林海雪原间的国际化旅游小镇",b:"第二批",la:29.75,lo:94.73},
+{r:"西北",p:"陕西省",n:"宝鸡市太白山温泉旅游度假区",d:"秦岭主峰太白山下的温泉康养度假地",b:"第四批",la:33.95,lo:107.75},
+{r:"西北",p:"陕西省",n:"商洛市牛背梁旅游度假区",d:"秦岭南麓高山草甸与原始森林度假地",b:"第五批",la:33.78,lo:108.95},
+{r:"西北",p:"甘肃省",n:"临夏永靖刘家峡旅游度假区",d:"黄河三峡与丹霞地貌的西北度假胜地",b:"第七批",la:35.93,lo:103.32},
+{r:"西北",p:"宁夏回族自治区",n:"中卫大漠黄河(沙坡头)旅游度假区",d:"大漠孤烟与黄河奔流的塞上度假奇观",b:"第七批",la:37.52,lo:105.00},
+{r:"西北",p:"新疆维吾尔自治区",n:"那拉提旅游度假区",d:"空中草原，哈萨克族牧歌中的草原度假地",b:"第四批",la:43.32,lo:84.02},
+{r:"西北",p:"新疆生产建设兵团",n:"五家渠青格达湖旅游度假区",d:"天山北麓军垦文化与湖泊生态度假地",b:"第七批",la:44.17,lo:87.55}
+];
+
+var regionColors={"东北":"#e74c3c","华北":"#e67e22","华东":"#27ae60","华中":"#2980b9","华南":"#8e44ad","西南":"#16a085","西北":"#d4a017"};
+var regionCounts={};
+resorts.forEach(function(r){regionCounts[r.r]=(regionCounts[r.r]||0)+1});
+
+// WGS84 -> GCJ02
+function wgs84ToGcj02(lng,lat){
+  var pi=3.14159265358979324,a=6378245.0,ee=0.00669342162296594323;
+  function oC(l2,l3){return l2<72.004||l2>137.8347||l3<0.8293||l3>55.8271}
+  function tL(x,y){var r=-100+2*x+3*y+.2*y*y+.1*x*y+.2*Math.sqrt(Math.abs(x));r+=(20*Math.sin(6*x*pi)+20*Math.sin(2*x*pi))*2/3;r+=(20*Math.sin(y*pi)+40*Math.sin(y/3*pi))*2/3;r+=(160*Math.sin(y/12*pi)+320*Math.sin(y*pi/30))*2/3;return r}
+  function tN(x,y){var r=300+x+2*y+.1*x*x+.1*x*y+.1*Math.sqrt(Math.abs(x));r+=(20*Math.sin(6*x*pi)+20*Math.sin(2*x*pi))*2/3;r+=(20*Math.sin(x*pi)+40*Math.sin(x/3*pi))*2/3;r+=(150*Math.sin(x/12*pi)+300*Math.sin(x/30*pi))*2/3;return r}
+  if(oC(lng,lat))return[lng,lat];
+  var dA=tL(lng-105,lat-35),dN=tN(lng-105,lat-35),rR=lat/180*pi,m=Math.sin(rR);
+  m=1-ee*m*m;var sM=Math.sqrt(m);
+  dA=(dA*180)/((a*(1-ee))/(m*sM)*pi);
+  dN=(dN*180)/((a*(1-ee))/(m*sM)*pi)*Math.cos(rR);
+  return[lng+dN,lat+dA];
+}
+function toG(lng,lat){try{return wgs84ToGcj02(lng,lat)}catch(e){return[lng,lat]}}
+
+// MAP
+var map=L.map('map',{scrollWheelZoom:true,zoomControl:false}).setView([35.5,108],4);
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{
+  subdomains:'1234',maxZoom:18,attribution:'&copy; Gaode'
+}).addTo(map);
+
+var allMarkers=[];
+resorts.forEach(function(r){
+  var c=regionColors[r.r],g=toG(r.lo,r.la);
+  var popup='<div style="font-family:system-ui,sans-serif;min-width:180px">'
+    +'<div style="font-size:14px;font-weight:700;color:#1a3a5c;margin-bottom:3px">'+r.n+'</div>'
+    +'<div style="font-size:11px;color:#888;margin-bottom:4px">'+r.p+' · '+r.b+'</div>'
+    +'<div style="font-size:12px;color:#555;line-height:1.5">'+r.d+'</div></div>';
+  var m=L.circleMarker([g[1],g[0]],{radius:7,fillColor:c,color:'#fff',weight:2,opacity:1,fillOpacity:.88})
+    .addTo(map).bindPopup(popup,{maxWidth:260});
+  m._rd=r;allMarkers.push({marker:m,data:r});
+});
+
+// Legend
+var legend=L.control({position:'bottomright'});
+legend.onAdd=function(){
+  var d=L.DomUtil.create('div','legend'),h='<h4>地区</h4><ul>';
+  for(var rg in regionColors)h+='<li data-region="'+rg+'"><span style="background:'+regionColors[rg]+'"></span>'+rg+'('+regionCounts[rg]+')</li>';
+  d.innerHTML=h+'</ul>';
+  d.querySelectorAll('li').forEach(function(li){li.addEventListener('click',function(){filterByRegion(this.dataset.region)})});
+  return d;
+};
+legend.addTo(map);
+
+// Info
+var info=L.control({position:'topright'});
+info.onAdd=function(){
+  var d=L.DomUtil.create('div','info-box');
+  d.innerHTML='<h3>国家级旅游度假区</h3><div>共 <b style="color:#2d6a9f;font-size:16px">85</b> 家</div><div style="color:#888;font-size:11px;margin-top:3px">点击圆点查看详情</div>';
+  return d;
+};
+info.addTo(map);
+
+// Search
+var sc=L.control({position:'topleft'});
+sc.onAdd=function(){
+  var d=L.DomUtil.create('div','search-wrap');
+  d.innerHTML='<input type="text" id="searchInput" placeholder="搜索名称或省份..."><span class="count" id="searchCount">85家</span>';
+  L.DomEvent.disableClickPropagation(d);return d;
+};
+sc.addTo(map);
+
+// TABLE
+var tbody=document.getElementById('tableBody');
+function renderTable(list){
+  tbody.innerHTML='';
+  list.forEach(function(r,i){
+    var tr=document.createElement('tr');tr.className='data-row';
+    tr.innerHTML='<td style="text-align:center;color:#aaa">'+(i+1)+'</td>'
+      +'<td><span class="region-tag" style="background:'+regionColors[r.r]+'">'+r.r+'</span></td>'
+      +'<td style="text-align:center;font-size:11px">'+r.p+'</td>'
+      +'<td class="name-cell">'+r.n+'</td>'
+      +'<td class="desc-cell" title="'+r.d+'">'+r.d+'</td>'
+      +'<td><span class="batch-tag">'+r.b+'</span></td>';
+    tr.addEventListener('click',function(){
+      var g=toG(r.lo,r.la);map.setView([g[1],g[0]],10);
+      allMarkers.forEach(function(m){if(m.data===r)m.marker.openPopup()});
+      window.scrollTo({top:document.querySelector('.map-section').offsetTop-10,behavior:'smooth'});
+    });
+    tbody.appendChild(tr);
+  });
+}
+renderTable(resorts);
+
+// Filters
+var fg=document.getElementById('filterGroup');
+Object.keys(regionColors).forEach(function(rg){
+  var b=document.createElement('button');b.className='filter-btn';b.dataset.region=rg;
+  b.textContent=rg+'('+regionCounts[rg]+')';fg.appendChild(b);
+});
+
+var curF='全部';
+function filterByRegion(rg){
+  if(rg===curF)rg='全部';curF=rg;
+  fg.querySelectorAll('.filter-btn').forEach(function(b){b.classList.toggle('active',b.dataset.region===rg)});
+  var f=rg==='全部'?resorts:resorts.filter(function(r){return r.r===rg});
+  renderTable(f);document.getElementById('searchCount').textContent=f.length+'家';
+  allMarkers.forEach(function(m){rg==='全部'||m.data.r===rg?map.addLayer(m.marker):map.removeLayer(m.marker)});
+  if(f.length>0){
+    var pts=f.map(function(r){var g=toG(r.lo,r.la);return[g[1],g[0]]});
+    map.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:8});
+  }
+}
+fg.querySelectorAll('.filter-btn').forEach(function(b){b.addEventListener('click',function(){filterByRegion(this.dataset.region)})});
+
+// Search
+document.getElementById('searchInput').addEventListener('input',function(){
+  var q=this.value.trim().toLowerCase();
+  if(!q){renderTable(resorts);document.getElementById('searchCount').textContent='85家';return}
+  var m=resorts.filter(function(r){return r.n.toLowerCase().indexOf(q)>=0||r.p.indexOf(q)>=0||r.d.indexOf(q)>=0});
+  renderTable(m);document.getElementById('searchCount').textContent='找到'+m.length+'家';
+});
+
+// Back to top
+window.addEventListener('scroll',function(){document.getElementById('backTop').style.display=window.scrollY>300?'block':'none'});
+</script>
+</body>
+</html>

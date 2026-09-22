@@ -1,0 +1,4 @@
+*.credentials
+.git-credentials
+.DS_Store
+Thumbs.db
