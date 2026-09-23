@@ -91,6 +91,44 @@
 
 ---
 
+## 2026-09-23: Split View, Holiday Heat, Data Expansion
+
+### Tasks Completed
+1. **UI Rework (user feedback driven)**
+   - Removed Hero "发现中国之美" and 热门推荐 sections
+   - Airbnb-style split layout: left 420px scrolling list + sticky map
+   - Replaced fullscreen modal with map popup + list-column drawer
+   - Full-viewport fixed layout (`body overflow hidden`, max-width 1600px)
+
+2. **Holiday Heat Toolbar**
+   - Public holiday API: `https://public-holidays.toolhub.run/api/public-holidays?year=YYYY&code=cn`
+   - View toggle: `标记点` / `🔥 节假日热力` (leaflet.heat)
+   - Heat = local attraction heat × holiday coefficient (春节1.6/国庆1.5/五一1.4/…)
+   - Noted in UI: real-time crowd APIs need enterprise keys
+
+3. **Data Expansion + Local Images**
+   - Attractions: 60 → **153** (125×5A + 28×4A)
+   - Family: 20 → **63**
+   - Resorts: 86 (re-imaged, fixed `price:"free"` → `免费`)
+   - Images: Bing image search → download → 480×360 JPEG in `travel/img/` (302 files)
+   - Abandoned picsum/placehold (not scenic); Wikipedia/Baidu/DuckDuckGo blocked
+   - Grade badges (5A red / 4A orange) on cards, popup, drawer
+
+### Files Modified
+- `travel/index.html` - Split view, drawer, holiday heat, grade badges
+- `travel/data/attractions.json` - 153 attractions with `g`/`img`/`heat`
+- `travel/data/hotels.json` - 63 family items with local images
+- `travel/data/resorts.json` - 86 resorts, local images, price fix
+- `travel/img/` - 302 local JPEGs (att_/fam_/res_*.jpg)
+- `AGENTS.md` - Updated structure and feature docs
+
+### GitHub URLs
+- Homepage: https://gloomyluo.github.io
+- Enhanced Map: https://gloomyluo.github.io/travel/index.html
+- Legacy Map: https://gloomyluo.github.io/travel/resorts.html
+
+---
+
 ## Future Tasks
 - [ ] Add more sections (tech blog, life notes, etc.)
 - [ ] Implement dark mode toggle
@@ -99,3 +137,4 @@
 - [ ] Add route planner for multi-stop trips
 - [ ] Optimize page load speed
 - [ ] Add analytics (optional)
+- [ ] Add Ctrip deep links for new attractions/family items

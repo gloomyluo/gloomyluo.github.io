@@ -12,12 +12,13 @@
 blog/
 ├── index.html              # Blog homepage with navigation cards
 ├── travel/
-│   ├── index.html          # Enhanced travel map (layers + cascade menu + heatmap)
+│   ├── index.html          # Enhanced travel map (split view + drawer + holiday heat)
 │   ├── resorts.html        # Legacy resorts-only map (85 national resorts)
+│   ├── img/                # Local images for list cards (att_/fam_/res_*.jpg)
 │   └── data/
-│       ├── resorts.json    # 85 national tourist resorts
-│       ├── attractions.json # 50 curated 5A attractions
-│       ├── hotels.json     # 20 family hotels/theme parks
+│       ├── resorts.json    # 86 national tourist resorts
+│       ├── attractions.json # 153 attractions (125×5A + 28×4A)
+│       ├── hotels.json     # 63 family hotels/theme parks
 │       └── regions.json    # 7 regions with feature tags
 ├── docs/                   # Project documentation
 └── AGENTS.md               # This file
@@ -32,13 +33,15 @@ blog/
 ## Key Features
 
 ### Travel Map (`travel/index.html`) - Enhanced Version
-- 155 total items: 85 resorts + 50 attractions + 20 family hotels/parks
-- **Layer Control**: Toggle resorts/attractions/hotels independently
-- **Cascade Menu**: Region navigation with feature tags and item lists
-- **Heatmap**: Density visualization (via leaflet.heat plugin)
+- 302 total items: 86 resorts + 153 attractions + 63 family hotels/parks
+- **Split View**: Airbnb-style list (420px) + sticky map (no fullscreen modal)
+- **Detail**: Map leaflet popup + left-panel drawer (full info)
+- **Holiday Heat**: Toolbar holiday picker (public-holidays API) × local heat → leaflet.heat layer
+- **Grades**: 5A/4A badges on cards, popups, and drawer
+- **Local Images**: Bing-matched scenery photos stored in `travel/img/`
 - **Region Features**: 7 regions with cultural/cuisine tags
 - **Data Split**: JSON files in `travel/data/` for easy maintenance
-- Mobile-responsive design (45vh map on mobile, 560px on desktop)
+- Mobile-responsive (stacked layout ≤900px)
 
 ### Legacy Resorts Map (`travel/resorts.html`)
 - 85 national-level tourist resorts only
