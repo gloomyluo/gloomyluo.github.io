@@ -1,4 +1,5 @@
 *.credentials
 .git-credentials
+*credential*
 .DS_Store
 Thumbs.db
