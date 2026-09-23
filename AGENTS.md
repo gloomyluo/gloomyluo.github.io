@@ -12,7 +12,13 @@
 blog/
 ├── index.html              # Blog homepage with navigation cards
 ├── travel/
-│   └── resorts.html        # 85 Chinese national tourist resorts map
+│   ├── index.html          # Enhanced travel map (layers + cascade menu + heatmap)
+│   ├── resorts.html        # Legacy resorts-only map (85 national resorts)
+│   └── data/
+│       ├── resorts.json    # 85 national tourist resorts
+│       ├── attractions.json # 50 curated 5A attractions
+│       ├── hotels.json     # 20 family hotels/theme parks
+│       └── regions.json    # 7 regions with feature tags
 ├── docs/                   # Project documentation
 └── AGENTS.md               # This file
 ```
@@ -25,14 +31,18 @@ blog/
 
 ## Key Features
 
-### Travel Resorts Map (`travel/resorts.html`)
-- 85 national-level tourist resorts (国家级旅游度假区)
-- 7 batches, last updated June 2024
-- Interactive map with region-colored markers
-- Search and filter functionality
-- Mobile-responsive design (42vh map on mobile, 520px on desktop)
-- Table supports horizontal scroll on mobile
-- Statistics cards with 2-column grid layout
+### Travel Map (`travel/index.html`) - Enhanced Version
+- 155 total items: 85 resorts + 50 attractions + 20 family hotels/parks
+- **Layer Control**: Toggle resorts/attractions/hotels independently
+- **Cascade Menu**: Region navigation with feature tags and item lists
+- **Heatmap**: Density visualization (via leaflet.heat plugin)
+- **Region Features**: 7 regions with cultural/cuisine tags
+- **Data Split**: JSON files in `travel/data/` for easy maintenance
+- Mobile-responsive design (45vh map on mobile, 560px on desktop)
+
+### Legacy Resorts Map (`travel/resorts.html`)
+- 85 national-level tourist resorts only
+- Original single-file implementation
 
 ### Map Configuration
 - **Tile Provider**: Gaode/AMap (not OpenStreetMap, which fails in China)
@@ -72,11 +82,14 @@ blog/
 
 ## Common Tasks
 
-### Update Resort Data
-1. Edit `travel/resorts.html`
-2. Update the `resorts` array with new data
-3. Verify coordinates are in GCJ02 format
-4. Test on mobile viewport
+### Update Travel Map Data
+1. Edit JSON files in `travel/data/`:
+   - `resorts.json` - National tourist resorts
+   - `attractions.json` - Curated 5A attractions
+   - `hotels.json` - Family hotels and theme parks
+   - `regions.json` - Region colors and feature tags
+2. Coordinates must be in WGS84 (auto-converted to GCJ02)
+3. Test on mobile viewport
 
 ### Add New Section
 1. Create directory (e.g., `tech/`)

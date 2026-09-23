@@ -49,9 +49,53 @@
 
 ---
 
+## 2026-09-23: Travel Map Enhancement
+
+### Tasks Completed
+1. **Data Expansion**
+   - Added 50 curated 5A attractions (`attractions.json`)
+   - Added 20 family hotels/theme parks (`hotels.json`)
+   - Added region features for 7 regions (`regions.json`)
+   - Total: 155 items across 3 categories
+
+2. **Architecture Refactor**
+   - Split data into separate JSON files
+   - New unified page `travel/index.html`
+   - Kept legacy `resorts.html` for backward compatibility
+
+3. **New Features**
+   - **Layer Control**: Independent toggle for resorts/attractions/hotels
+   - **Cascade Menu**: Region navigation → feature tags → item list
+   - **Heatmap**: Optional density visualization (leaflet.heat)
+   - **Region Features**: Cultural/cuisine tags per region
+   - **Type Filters**: Filter table by category
+
+4. **Security**
+   - Updated `.gitignore` to exclude `*credential*`
+   - Removed accidentally staged credentials file
+
+### Files Created/Modified
+- `travel/index.html` - New enhanced map (542 lines)
+- `travel/data/resorts.json` - 85 resorts
+- `travel/data/attractions.json` - 50 attractions
+- `travel/data/hotels.json` - 20 hotels/parks
+- `travel/data/regions.json` - 7 regions with features
+- `index.html` - Updated navigation card
+- `.gitignore` - Added credential patterns
+- `AGENTS.md` - Updated documentation
+
+### GitHub URLs
+- Homepage: https://gloomyluo.github.io
+- Enhanced Map: https://gloomyluo.github.io/travel/index.html
+- Legacy Map: https://gloomyluo.github.io/travel/resorts.html
+
+---
+
 ## Future Tasks
 - [ ] Add more sections (tech blog, life notes, etc.)
 - [ ] Implement dark mode toggle
-- [ ] Add search functionality across all pages
+- [ ] Add holiday recommendation labels
+- [ ] Add distance measurement tool
+- [ ] Add route planner for multi-stop trips
 - [ ] Optimize page load speed
 - [ ] Add analytics (optional)
