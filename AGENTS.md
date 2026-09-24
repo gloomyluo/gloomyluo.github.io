@@ -20,8 +20,10 @@ blog/
 │       ├── attractions.json # 153 attractions (125×5A + 28×4A)
 │       ├── hotels.json     # 63 family hotels/theme parks
 │       └── regions.json    # 7 regions with feature tags
+├── hotel/
+│   └── index.html          # 国庆酒店库存地图 (5369 hotels, 7 groups, 149 brands)
 ├── docs/                   # Project documentation
-└── AGENTS.md               # This file
+└── AGENTS.md               # This guide
 ```
 
 ## Tech Stack
@@ -46,6 +48,20 @@ blog/
 ### Legacy Resorts Map (`travel/resorts.html`)
 - 85 national-level tourist resorts only
 - Original single-file implementation
+
+### Hotel Inventory Map (`hotel/index.html`)
+- **Source Project**: `E:\AIAgentProject\Daily\hotel_inventory` (build via `build_map.py`)
+- **Data**: 5369 hotels, 7 groups (万豪/洲际/希尔顿/凯悦/雅高/温德姆/华住), 149 brands, 57 cities
+- **Tags**: 高端 1809 · 商务 1984 · 城市 927 · 度假 641 · 亲子 8
+- **Prices**: 飞猪房价 3752/5369 (69.9%), unit ¥/night, check-in 2026-10-02
+- **Features**:
+  - 高德底图 + Leaflet markercluster (5369 points)
+  - 类型/集团/城市/品牌/星级多维筛选 + 关键词搜索
+  - 侧边栏列表（前 400 条）+ 城市名点击定位
+  - 缩放至 zoom≥16 视口内所有 marker 自动展开弹窗（autoClose:false）
+  - 弹窗含价格、评分、标签、携程详情链接、去哪儿 App 预订跳转
+- **Map Configuration**: Same as travel map (Gaode tiles, GCJ02 coords)
+- **Update Flow**: 修改 `hotel_inventory/build_map.py` → `python build_map.py` → 复制 `output/hotel_map.html` 到 `blog/hotel/index.html` → commit & push
 
 ### Map Configuration
 - **Tile Provider**: Gaode/AMap (not OpenStreetMap, which fails in China)
@@ -99,3 +115,18 @@ blog/
 2. Create `index.html` in that directory
 3. Add card to main `index.html`
 4. Commit: `git add -A && git commit -m "feat: add [section]" && git push`
+
+### Update Hotel Inventory Map
+1. Source project at `E:\AIAgentProject\Daily\hotel_inventory`
+2. Edit `build_map.py` (map config/JS logic) or data scripts (prices/coords/tags)
+3. Regenerate: `python build_map.py` → `output/hotel_map.html`
+4. Deploy: copy to `blog/hotel/index.html` → commit & push
+5. Key files in source project:
+   - `build_map.py` — map generator (HTML/JS/CSS all inline)
+   - `fetch_prices.py` / `fetch_prices2.py` — 飞猪房价抓取
+   - `scrape_brands.py` — 携程品牌页库存抓取
+   - `enrich_coords4.py` — 坐标补全
+   - `tag_types.py` — 类型标签
+   - `output/hotels_raw.json` — 主数据（5369 家，含坐标/标签/价格）
+   - `output/coords.json` — 坐标库
+   - `PROGRESS.md` — 项目进展文档
